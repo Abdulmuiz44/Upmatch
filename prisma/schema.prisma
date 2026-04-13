@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ConnectedAccountProvider {
+  UPWORK
+}
+
+enum ConnectedAccountStatus {
+  PENDING
+  ACTIVE
+  REVOKED
+  ERROR
+}
+
+enum ContractTypePreference {
+  HOURLY
+  FIXED_PRICE
+  BOTH
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  passwordHash      String
+  fullName          String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  connectedAccounts ConnectedAccount[]
+  freelancerProfile FreelancerProfile?
+  preference        UserPreference?
+
+  @@index([createdAt])
+}
+
+model ConnectedAccount {
+  id                    String                 @id @default(cuid())
+  userId                String
+  provider              ConnectedAccountProvider
+  status                ConnectedAccountStatus @default(PENDING)
+  externalAccountId     String?
+  tenantId              String?
+  scope                 String?
+  encryptedAccessToken  String?
+  encryptedRefreshToken String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  lastSyncedAt          DateTime?
+  errorCode             String?
+  errorMessage          String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, userId])
+  @@index([userId, status])
+  @@index([provider, tenantId])
+}
+
+model FreelancerProfile {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  upworkProfileId     String?  @unique
+  profileTitle        String?
+  overview            String?
+  hourlyRateUsdCents  Int?
+  profileUrl          String?
+  categories          String[]
+  skills              String[]
+  rawPayload          Json?
+  syncedAt            DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([syncedAt])
+}
+
+model UserPreference {
+  id                    String                 @id @default(cuid())
+  userId                String                 @unique
+  preferredRoles        String[]
+  preferredKeywords     String[]
+  excludedKeywords      String[]
+  preferredIndustries   String[]
+  minimumHourlyRateUsd  Decimal?               @db.Decimal(10, 2)
+  minimumFixedBudgetUsd Decimal?               @db.Decimal(10, 2)
+  contractType          ContractTypePreference @default(BOTH)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([contractType])
+}
