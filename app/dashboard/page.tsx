@@ -17,9 +17,7 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Upwork connection status</CardTitle>
-            <CardDescription>
-              Start from the official OAuth flow and keep all tokens server-side.
-            </CardDescription>
+            <CardDescription>OAuth and GraphQL integration is fully server-side.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex items-center justify-between rounded-2xl bg-secondary p-4">
@@ -37,10 +35,7 @@ export default async function DashboardPage() {
               <a className={cn(buttonVariants({ size: "default" }))} href="/api/upwork/connect">
                 Connect Upwork
               </a>
-              <Link
-                className={cn(buttonVariants({ variant: "outline", size: "default" }))}
-                href="/dashboard/settings"
-              >
+              <Link className={cn(buttonVariants({ variant: "outline", size: "default" }))} href="/dashboard/settings">
                 Open settings
               </Link>
             </div>
@@ -50,9 +45,7 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Preference summary</CardTitle>
-            <CardDescription>
-              The foundation is ready for deterministic matching inputs.
-            </CardDescription>
+            <CardDescription>Ranking uses your saved role, keyword, and budget signals.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <div className="rounded-2xl border p-4">
@@ -77,9 +70,7 @@ export default async function DashboardPage() {
             </div>
             <div className="rounded-2xl border p-4">
               <p className="text-sm font-medium">Contract type</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {snapshot.preference?.contractType ?? "BOTH"}
-              </p>
+              <p className="mt-2 text-sm text-muted-foreground">{snapshot.preference?.contractType ?? "BOTH"}</p>
             </div>
           </CardContent>
         </Card>
@@ -88,31 +79,36 @@ export default async function DashboardPage() {
       <section className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Matched jobs placeholder</CardTitle>
-            <CardDescription>
-              These records will be replaced by real normalized Upwork job data in the
-              next slice.
-            </CardDescription>
+            <CardTitle>Ranked job matches</CardTitle>
+            <CardDescription>Deterministic scoring with transparent reasons and warnings.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {snapshot.emptyStates.noConnection && (
+              <div className="rounded-2xl border p-4 text-sm text-muted-foreground">Connect your Upwork account to ingest jobs.</div>
+            )}
+            {snapshot.emptyStates.noPreferences && (
+              <div className="rounded-2xl border p-4 text-sm text-muted-foreground">Save preferences in onboarding/settings to activate matching.</div>
+            )}
+            {snapshot.emptyStates.noSyncedProfile && !snapshot.emptyStates.noConnection && (
+              <div className="rounded-2xl border p-4 text-sm text-muted-foreground">Profile has not been synced yet. Run refresh to pull latest profile data.</div>
+            )}
+            {snapshot.emptyStates.noJobsFound && !snapshot.emptyStates.noConnection && !snapshot.emptyStates.noPreferences && (
+              <div className="rounded-2xl border p-4 text-sm text-muted-foreground">No jobs found yet. Try updating keywords or run refresh later.</div>
+            )}
             {snapshot.jobs.map((job) => (
-              <div
-                className="flex flex-col gap-4 rounded-2xl border p-5 md:flex-row md:items-start md:justify-between"
-                key={job.id}
-              >
+              <div className="flex flex-col gap-4 rounded-2xl border p-5 md:flex-row md:items-start md:justify-between" key={job.id}>
                 <div>
                   <p className="text-base font-semibold">{job.title}</p>
-                  <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                    {job.summary}
-                  </p>
-                  <p className="mt-3 text-sm text-foreground">{job.reason}</p>
+                  <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{job.summary || "No description available."}</p>
+                  <p className="mt-3 text-sm text-foreground">{job.explanation.topReasons?.[0] ?? "Scored using your current profile and preferences."}</p>
+                  {job.explanation.warnings?.[0] && (
+                    <p className="mt-1 text-xs text-amber-700">Warning: {job.explanation.warnings[0]}</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <Badge>Score {job.score}</Badge>
-                  <Link
-                    className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-                    href={`/dashboard/jobs/${job.id}`}
-                  >
+                  <Badge>Score {job.overallScore}</Badge>
+                  <Badge className="bg-transparent border border-border text-foreground">{job.state}</Badge>
+                  <Link className={cn(buttonVariants({ variant: "outline", size: "sm" }))} href={`/dashboard/jobs/${job.id}`}>
                     View
                   </Link>
                 </div>
@@ -123,19 +119,15 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Refresh status</CardTitle>
-            <CardDescription>
-              Rate-limit-safe refresh workflows belong on the server.
-            </CardDescription>
+            <CardTitle>Refresh pipeline</CardTitle>
+            <CardDescription>Runs profile sync, job ingest, and scoring in one request.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-2xl bg-secondary p-4 text-sm text-muted-foreground">
-              The refresh endpoint exists as a protected scaffold. Job search,
-              normalization, retention, and ranking are intentionally deferred to the
-              next implementation slice.
+              This keeps cache short-lived and rankings deterministic. Dismissed jobs are hidden from default feed.
             </div>
             <form action="/api/jobs/refresh" method="post">
-              <Button type="submit">Run placeholder refresh</Button>
+              <Button type="submit">Refresh jobs now</Button>
             </form>
           </CardContent>
         </Card>
