@@ -21,13 +21,19 @@ export async function upworkGraphqlRequest<TData, TVariables = Record<string, un
   options: GraphqlRequestOptions<TVariables>
 ) {
   const accessToken = decryptSecret(options.encryptedAccessToken);
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${accessToken}`
+  });
+
+  const tenantHeaders = buildTenantHeaders(options.tenantId);
+  if (tenantHeaders["X-Upwork-API-TenantId"]) {
+    headers.set("X-Upwork-API-TenantId", tenantHeaders["X-Upwork-API-TenantId"]);
+  }
+
   const response = await fetch(UPWORK_GRAPHQL_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-      ...buildTenantHeaders(options.tenantId)
-    },
+    headers,
     body: JSON.stringify({
       query: options.query,
       variables: options.variables

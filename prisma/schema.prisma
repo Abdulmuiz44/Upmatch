@@ -24,6 +24,13 @@ enum ContractTypePreference {
   BOTH
 }
 
+enum JobUserStateType {
+  NEW
+  SAVED
+  DISMISSED
+  APPLIED
+}
+
 model User {
   id                String             @id @default(cuid())
   email             String             @unique
@@ -34,6 +41,8 @@ model User {
   connectedAccounts ConnectedAccount[]
   freelancerProfile FreelancerProfile?
   preference        UserPreference?
+  jobScores         JobScore[]
+  jobStates         JobUserState[]
 
   @@index([createdAt])
 }
@@ -96,4 +105,74 @@ model UserPreference {
   user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([contractType])
+}
+
+model Job {
+  id                    String         @id @default(cuid())
+  providerJobId         String         @unique
+  providerCiphertext    String?
+  title                 String
+  description           String
+  contractType          String?
+  experienceLevel       String?
+  hourlyMinUsd          Decimal?       @db.Decimal(10, 2)
+  hourlyMaxUsd          Decimal?       @db.Decimal(10, 2)
+  fixedBudgetUsd        Decimal?       @db.Decimal(10, 2)
+  durationLabel         String?
+  category              String?
+  skills                String[]
+  clientCountry         String?
+  clientTotalHires      Int?
+  clientTotalPostedJobs Int?
+  clientTotalReviews    Int?
+  clientTotalFeedback   Decimal?       @db.Decimal(5, 2)
+  publishedAt           DateTime?
+  firstSeenAt           DateTime       @default(now())
+  lastSeenAt            DateTime       @default(now())
+  expiresAt             DateTime
+  rawPayload            Json?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  scores                JobScore[]
+  states                JobUserState[]
+
+  @@index([publishedAt])
+  @@index([expiresAt])
+  @@index([lastSeenAt])
+}
+
+model JobScore {
+  id              String   @id @default(cuid())
+  userId          String
+  jobId           String
+  overallScore    Int
+  skillScore      Int
+  keywordScore    Int
+  budgetScore     Int
+  preferenceScore Int
+  freshnessScore  Int
+  penaltyScore    Int
+  explanation     Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@index([userId, overallScore])
+}
+
+model JobUserState {
+  id        String           @id @default(cuid())
+  userId    String
+  jobId     String
+  state     JobUserStateType @default(NEW)
+  notes     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job       Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@index([userId, state])
 }

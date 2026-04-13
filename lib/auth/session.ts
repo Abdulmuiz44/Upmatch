@@ -5,6 +5,8 @@ import { createSessionToken, verifySessionToken, type SessionPayload } from "@/l
 
 const SESSION_COOKIE = "upmatch_session";
 
+export { createSessionToken };
+
 export async function setSessionCookie(payload: SessionPayload) {
   const token = await createSessionToken(payload);
   const cookieStore = await cookies();

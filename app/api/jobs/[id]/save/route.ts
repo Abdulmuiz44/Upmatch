@@ -1,6 +1,8 @@
+import { JobUserStateType } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth/session";
+import { upsertJobUserState } from "@/server/repos/job-user-state-repo";
 
 export async function POST(
   request: Request,
@@ -14,7 +16,11 @@ export async function POST(
 
   const { id } = await params;
 
-  return NextResponse.redirect(
-    new URL(`/dashboard/jobs/${id}?saved=placeholder`, request.url)
-  );
+  await upsertJobUserState({
+    userId: session.userId,
+    jobId: id,
+    state: JobUserStateType.SAVED
+  });
+
+  return NextResponse.redirect(new URL(`/dashboard/jobs/${id}?saved=1`, request.url));
 }
