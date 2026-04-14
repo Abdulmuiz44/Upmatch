@@ -5,6 +5,10 @@ import { getDismissedJobIds, getJobUserState } from "@/server/repos/job-user-sta
 import { getRankedJobsForUser } from "@/server/repos/job-score-repo";
 import { getPreferenceByUserId } from "@/server/repos/preference-repo";
 import { findUpworkConnectionByUserId } from "@/server/repos/connected-account-repo";
+import { getSyncStatus } from "@/server/services/sync-orchestrator-service";
+
+export async function getDashboardSnapshot(userId: string) {
+  const [connection, preference, profile, rankedRows, dismissedJobIds, syncStatus] = await Promise.all([
 
 export async function getDashboardSnapshot(userId: string) {
   const [connection, preference, profile, rankedRows, dismissedJobIds] = await Promise.all([
@@ -12,6 +16,8 @@ export async function getDashboardSnapshot(userId: string) {
     getPreferenceByUserId(userId),
     getFreelancerProfileByUserId(userId),
     getRankedJobsForUser(userId),
+    getDismissedJobIds(userId),
+    getSyncStatus(userId)
     getDismissedJobIds(userId)
   ]);
 
@@ -32,6 +38,7 @@ export async function getDashboardSnapshot(userId: string) {
           warnings?: string[];
           matchedKeywords?: string[];
           missingSignals?: string[];
+          warningLevel?: "none" | "low" | "medium" | "high";
         },
         state: state?.state ?? "NEW"
       };
@@ -43,6 +50,7 @@ export async function getDashboardSnapshot(userId: string) {
     preference,
     profile,
     jobs,
+    syncStatus,
     emptyStates: {
       noConnection: !connection,
       noPreferences: !preference,

@@ -7,9 +7,23 @@ import { requireUser } from "@/lib/auth/user";
 import { formatCurrency, cn } from "@/lib/utils";
 import { getDashboardSnapshot } from "@/server/services/dashboard-service";
 
-export default async function DashboardPage() {
+function renderRefreshMessage(refresh?: string) {
+  if (refresh === "queued") return "Refresh queued. Results will appear shortly.";
+  if (refresh === "success") return "Refresh completed successfully.";
+  if (refresh === "missing_connection") return "Connect Upwork before refreshing.";
+  return null;
+}
+
+export default async function DashboardPage({
+  searchParams
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await requireUser();
   const snapshot = await getDashboardSnapshot(user.id);
+  const params = (await searchParams) ?? {};
+  const refreshStatus = Array.isArray(params.refresh) ? params.refresh[0] : params.refresh;
+  const cleanupStatus = Array.isArray(params.cleanup) ? params.cleanup[0] : params.cleanup;
 
   return (
     <div className="space-y-6">
@@ -30,6 +44,15 @@ export default async function DashboardPage() {
                 </p>
               </div>
               <Badge>{snapshot.connection ? "Configured" : "Pending"}</Badge>
+            </div>
+            <div className="rounded-2xl border p-4 text-sm text-muted-foreground">
+              Sync status: {snapshot.syncStatus?.status ?? "IDLE"}
+              {snapshot.syncStatus?.completedAt && (
+                <span> · Last run {new Date(snapshot.syncStatus.completedAt).toLocaleString()}</span>
+              )}
+              {snapshot.syncStatus?.status === "FAILED" && snapshot.syncStatus.errorMessage && (
+                <p className="mt-1 text-amber-700">Last failure: {snapshot.syncStatus.errorMessage}</p>
+              )}
             </div>
             <div className="flex flex-wrap gap-3">
               <a className={cn(buttonVariants({ size: "default" }))} href="/api/upwork/connect">
@@ -102,6 +125,7 @@ export default async function DashboardPage() {
                   <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{job.summary || "No description available."}</p>
                   <p className="mt-3 text-sm text-foreground">{job.explanation.topReasons?.[0] ?? "Scored using your current profile and preferences."}</p>
                   {job.explanation.warnings?.[0] && (
+                    <p className="mt-1 text-xs text-amber-700">Warning ({job.explanation.warningLevel ?? "low"}): {job.explanation.warnings[0]}</p>
                     <p className="mt-1 text-xs text-amber-700">Warning: {job.explanation.warnings[0]}</p>
                   )}
                 </div>
@@ -120,10 +144,27 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Refresh pipeline</CardTitle>
+            <CardDescription>Queue-backed sync with inline fallback for operational safety.</CardDescription>
             <CardDescription>Runs profile sync, job ingest, and scoring in one request.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {renderRefreshMessage(refreshStatus) && (
+              <div className="rounded-2xl border p-3 text-sm text-muted-foreground">{renderRefreshMessage(refreshStatus)}</div>
+            )}
+            {cleanupStatus === "success" && (
+              <div className="rounded-2xl border p-3 text-sm text-muted-foreground">Expired cache cleanup completed.</div>
+            )}
+            {cleanupStatus === "error" && (
+              <div className="rounded-2xl border p-3 text-sm text-amber-700">Cleanup failed. Try again.</div>
+            )}
             <div className="rounded-2xl bg-secondary p-4 text-sm text-muted-foreground">
+              Manual refresh is rate-limited and queued to avoid aggressive provider calls.
+            </div>
+            <form action="/api/jobs/refresh" method="post">
+              <Button type="submit">Refresh jobs now</Button>
+            </form>
+            <form action="/api/jobs/cleanup" method="post">
+              <Button variant="outline" type="submit">Cleanup expired cache</Button>
               This keeps cache short-lived and rankings deterministic. Dismissed jobs are hidden from default feed.
             </div>
             <form action="/api/jobs/refresh" method="post">

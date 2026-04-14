@@ -12,6 +12,10 @@ import {
   type UpworkJobSearchResponse
 } from "@/lib/upwork/queries";
 
+function logEvent(event: string, payload: Record<string, unknown>) {
+  console.info(JSON.stringify({ event, ...payload }));
+}
+
 export async function ingestMarketplaceJobs(userId: string) {
   const [connection, preference, profile] = await Promise.all([
     findUpworkConnectionByUserId(userId),
@@ -48,6 +52,7 @@ export async function ingestMarketplaceJobs(userId: string) {
   });
 
   try {
+    logEvent("jobs.ingest.started", { userId });
     const data = await upworkGraphqlRequest<UpworkJobSearchResponse, { request: typeof request }>({
       query: MARKETPLACE_JOB_SEARCH_QUERY,
       variables: { request },
@@ -59,11 +64,13 @@ export async function ingestMarketplaceJobs(userId: string) {
 
     const result = await upsertJobsFromMarketplace(normalizedJobs);
 
+    logEvent("jobs.ingest.succeeded", { userId, ...result });
     return {
       ok: true,
       ...result
     } as const;
   } catch (error) {
+    logEvent("jobs.ingest.failed", { userId, message: error instanceof Error ? error.message : "Unknown job ingestion error" });
     return {
       ok: false,
       reason: "UPSTREAM_ERROR",

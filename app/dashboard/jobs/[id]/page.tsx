@@ -8,11 +8,63 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { getJobById } from "@/server/repos/job-repo";
 import { getJobScore } from "@/server/repos/job-score-repo";
 import { getJobUserState } from "@/server/repos/job-user-state-repo";
+import { getOrGenerateProposalAssist } from "@/server/services/proposal-assist-service";
+
+export default async function JobDetailPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
 import { notFound } from "next/navigation";
 
 export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
   const { id } = await params;
+  const query = (await searchParams) ?? {};
+  const assistStatus = Array.isArray(query.assist) ? query.assist[0] : query.assist;
+
+  const [job, score, state, assistResult] = await Promise.all([
+    getJobById(id),
+    getJobScore(user.id, id),
+    getJobUserState(user.id, id),
+    getOrGenerateProposalAssist(user.id, id)
+  ]);
+
+  if (!job) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Job no longer available</CardTitle>
+          <CardDescription>
+            This cached job may have expired and been removed during cleanup.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link className={cn(buttonVariants({ variant: "outline" }))} href="/dashboard">
+            Back to dashboard
+          </Link>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const explanation = (score?.explanation ?? {
+    topReasons: [],
+    warnings: [],
+    matchedKeywords: [],
+    missingSignals: [],
+    warningLevel: "none"
+  }) as {
+    topReasons: string[];
+    warnings: string[];
+    matchedKeywords: string[];
+    missingSignals: string[];
+    warningLevel?: "none" | "low" | "medium" | "high";
+  };
+
+  const assist = assistResult.ok ? assistResult.assist : null;
 
   const [job, score, state] = await Promise.all([
     getJobById(id),
@@ -58,6 +110,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               <p className="mt-1 text-muted-foreground">
                 Hourly: {formatCurrency(job.hourlyMinUsd ? Number(job.hourlyMinUsd) : null)} - {formatCurrency(job.hourlyMaxUsd ? Number(job.hourlyMaxUsd) : null)}
               </p>
+              <p className="text-muted-foreground">Fixed: {formatCurrency(job.fixedBudgetUsd ? Number(job.fixedBudgetUsd) : null)}</p>
               <p className="text-muted-foreground">
                 Fixed: {formatCurrency(job.fixedBudgetUsd ? Number(job.fixedBudgetUsd) : null)}
               </p>
@@ -91,6 +144,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               </ul>
             </div>
             <div className="rounded-2xl border p-4">
+              <p className="font-medium">Warnings ({explanation.warningLevel ?? "none"})</p>
               <p className="font-medium">Warnings</p>
               <ul className="mt-2 list-disc pl-4 text-muted-foreground">
                 {explanation.warnings.map((warning) => (
@@ -98,6 +152,70 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 ))}
               </ul>
             </div>
+          </div>
+
+          <div className="rounded-2xl border p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-medium">Proposal guidance (advisory only)</p>
+                <p className="text-xs text-muted-foreground">
+                  Upmatch provides guidance only. Final writing and submission happen on Upwork.
+                </p>
+              </div>
+              <form action={`/api/jobs/${job.id}/proposal-assist`} method="post">
+                <button className={cn(buttonVariants({ variant: "outline", size: "sm" }))} type="submit">
+                  Generate proposal guidance
+                </button>
+              </form>
+            </div>
+
+            {assistStatus === "generated" && (
+              <p className="mt-3 text-xs text-emerald-700">Guidance refreshed.</p>
+            )}
+            {assistStatus === "error" && (
+              <p className="mt-3 text-xs text-amber-700">Could not refresh guidance right now.</p>
+            )}
+
+            {assist ? (
+              <div className="mt-4 space-y-4 text-muted-foreground">
+                <div>
+                  <p className="text-foreground font-medium">Opening angle</p>
+                  <p>{assist.openingAngle ?? "No opening angle generated yet."}</p>
+                </div>
+                <div>
+                  <p className="text-foreground font-medium">Key proof points</p>
+                  <ul className="list-disc pl-4">
+                    {assist.keyProofPoints.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-foreground font-medium">Risks to address</p>
+                  <ul className="list-disc pl-4">
+                    {assist.risksToAddress.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-foreground font-medium">Smart client questions</p>
+                  <ul className="list-disc pl-4">
+                    {assist.clientQuestions.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-foreground font-medium">Tone guidance</p>
+                  <p>{assist.toneGuidance ?? "No tone guidance generated yet."}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-3 text-xs text-muted-foreground">No guidance available yet.</p>
+            )}
+          </div>
+
           </div>
 
           <div className="rounded-2xl border p-4 text-muted-foreground">

@@ -31,6 +31,22 @@ enum JobUserStateType {
   APPLIED
 }
 
+enum SyncRunType {
+  PROFILE_SYNC
+  JOB_INGEST
+  JOB_RANK
+  FULL_REFRESH
+  CLEANUP
+  PROPOSAL_ASSIST
+}
+
+enum SyncRunStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
 model User {
   id                String             @id @default(cuid())
   email             String             @unique
@@ -43,6 +59,8 @@ model User {
   preference        UserPreference?
   jobScores         JobScore[]
   jobStates         JobUserState[]
+  proposalAssists   ProposalAssist[]
+  syncRuns          SyncRun[]
 
   @@index([createdAt])
 }
@@ -135,6 +153,7 @@ model Job {
   updatedAt             DateTime       @updatedAt
   scores                JobScore[]
   states                JobUserState[]
+  proposalAssists       ProposalAssist[]
 
   @@index([publishedAt])
   @@index([expiresAt])
@@ -175,4 +194,38 @@ model JobUserState {
 
   @@unique([userId, jobId])
   @@index([userId, state])
+}
+
+model ProposalAssist {
+  id             String   @id @default(cuid())
+  userId         String
+  jobId          String
+  openingAngle   String?
+  keyProofPoints String[]
+  risksToAddress String[]
+  clientQuestions String[]
+  toneGuidance   String?
+  generatedAt    DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job            Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+}
+
+model SyncRun {
+  id           String        @id @default(cuid())
+  userId       String
+  type         SyncRunType
+  status       SyncRunStatus @default(QUEUED)
+  startedAt    DateTime?
+  completedAt  DateTime?
+  errorMessage String?
+  metadata     Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status, type])
 }
