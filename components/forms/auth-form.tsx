@@ -1,3 +1,5 @@
+import { CheckCircle2, ShieldCheck } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -11,7 +13,7 @@ type AuthFormProps = {
   action: string;
   submitLabel: string;
   footerLabel: string;
-  footerHref: string;
+  footerHref: Route;
   footerLinkText: string;
   includeFullName?: boolean;
   error?: string;
@@ -29,13 +31,26 @@ export function AuthForm({
   error
 }: AuthFormProps) {
   return (
-    <Card className="w-full max-w-lg border-white/80 bg-white/95">
-      <CardHeader>
-        <CardTitle className="text-2xl">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+    <Card className="w-full max-w-xl border-border/70 bg-white/92 shadow-panel">
+      <CardHeader className="px-5 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
+        <div className="eyebrow w-fit">Private workspace</div>
+        <CardTitle className="pt-2 text-[1.75rem] leading-tight sm:text-[2.3rem]">{title}</CardTitle>
+        <CardDescription className="max-w-md text-sm leading-6 sm:text-[15px] sm:leading-7">
+          {description}
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form action={action} className="space-y-5" method="post">
+      <CardContent className="space-y-5 px-5 pb-5 sm:space-y-6 sm:px-6 sm:pb-6">
+        <div className="grid gap-3 rounded-2xl border border-border/70 bg-secondary/60 p-4 text-sm text-muted-foreground sm:grid-cols-2">
+          <div className="flex items-start gap-2">
+            <ShieldCheck className="mt-0.5 h-4 w-4 text-primary" />
+            <span>Manual apply flow only</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 text-primary" />
+            <span>Clear ranking and preference control</span>
+          </div>
+        </div>
+        <form action={action} className="space-y-4 sm:space-y-5" method="post">
           {includeFullName ? (
             <div className="space-y-2">
               <Label htmlFor="fullName">Full name</Label>
@@ -68,9 +83,9 @@ export function AuthForm({
             {submitLabel}
           </Button>
         </form>
-        <p className="mt-6 text-sm text-muted-foreground">
+        <p className="text-sm leading-6 text-muted-foreground">
           {footerLabel}{" "}
-          <Link className="font-medium text-primary" href={footerHref}>
+          <Link className="font-semibold text-primary" href={footerHref}>
             {footerLinkText}
           </Link>
         </p>
