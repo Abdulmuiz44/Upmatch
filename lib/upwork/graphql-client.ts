@@ -53,6 +53,27 @@ export async function upworkGraphqlRequest<TData, TVariables = Record<string, un
     const tenantHeaders = buildTenantHeaders(options.tenantId);
     if (tenantHeaders["X-Upwork-API-TenantId"]) {
       headers.set("X-Upwork-API-TenantId", tenantHeaders["X-Upwork-API-TenantId"]);
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${accessToken}`
+  });
+
+  const tenantHeaders = buildTenantHeaders(options.tenantId);
+  if (tenantHeaders["X-Upwork-API-TenantId"]) {
+    headers.set("X-Upwork-API-TenantId", tenantHeaders["X-Upwork-API-TenantId"]);
+  }
+
+  const response = await fetch(UPWORK_GRAPHQL_URL, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      query: options.query,
+      variables: options.variables
+    }),
+    cache: "no-store",
+    next: {
+      revalidate: 0,
+      tags: ["upwork-graphql", env.APP_URL]
     }
 
     lastRequestStartedAt = Date.now();

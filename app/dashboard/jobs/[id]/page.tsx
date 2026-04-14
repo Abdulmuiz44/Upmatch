@@ -17,6 +17,9 @@ export default async function JobDetailPage({
   params: Promise<{ id: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
+import { notFound } from "next/navigation";
+
+export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
   const { id } = await params;
   const query = (await searchParams) ?? {};
@@ -63,6 +66,28 @@ export default async function JobDetailPage({
 
   const assist = assistResult.ok ? assistResult.assist : null;
 
+  const [job, score, state] = await Promise.all([
+    getJobById(id),
+    getJobScore(user.id, id),
+    getJobUserState(user.id, id)
+  ]);
+
+  if (!job) {
+    notFound();
+  }
+
+  const explanation = (score?.explanation ?? {
+    topReasons: [],
+    warnings: [],
+    matchedKeywords: [],
+    missingSignals: []
+  }) as {
+    topReasons: string[];
+    warnings: string[];
+    matchedKeywords: string[];
+    missingSignals: string[];
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -86,6 +111,9 @@ export default async function JobDetailPage({
                 Hourly: {formatCurrency(job.hourlyMinUsd ? Number(job.hourlyMinUsd) : null)} - {formatCurrency(job.hourlyMaxUsd ? Number(job.hourlyMaxUsd) : null)}
               </p>
               <p className="text-muted-foreground">Fixed: {formatCurrency(job.fixedBudgetUsd ? Number(job.fixedBudgetUsd) : null)}</p>
+              <p className="text-muted-foreground">
+                Fixed: {formatCurrency(job.fixedBudgetUsd ? Number(job.fixedBudgetUsd) : null)}
+              </p>
             </div>
             <div className="rounded-2xl border p-4">
               <p className="font-medium">Metadata</p>
@@ -117,6 +145,7 @@ export default async function JobDetailPage({
             </div>
             <div className="rounded-2xl border p-4">
               <p className="font-medium">Warnings ({explanation.warningLevel ?? "none"})</p>
+              <p className="font-medium">Warnings</p>
               <ul className="mt-2 list-disc pl-4 text-muted-foreground">
                 {explanation.warnings.map((warning) => (
                   <li key={warning}>{warning}</li>
@@ -185,6 +214,12 @@ export default async function JobDetailPage({
             ) : (
               <p className="mt-3 text-xs text-muted-foreground">No guidance available yet.</p>
             )}
+          </div>
+
+          </div>
+
+          <div className="rounded-2xl border p-4 text-muted-foreground">
+            Proposal assist (coming soon): this section will provide guidance for proposal drafting after human review.
           </div>
 
           <div className="flex flex-wrap gap-3">

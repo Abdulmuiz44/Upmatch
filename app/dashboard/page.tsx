@@ -126,6 +126,7 @@ export default async function DashboardPage({
                   <p className="mt-3 text-sm text-foreground">{job.explanation.topReasons?.[0] ?? "Scored using your current profile and preferences."}</p>
                   {job.explanation.warnings?.[0] && (
                     <p className="mt-1 text-xs text-amber-700">Warning ({job.explanation.warningLevel ?? "low"}): {job.explanation.warnings[0]}</p>
+                    <p className="mt-1 text-xs text-amber-700">Warning: {job.explanation.warnings[0]}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
@@ -144,6 +145,7 @@ export default async function DashboardPage({
           <CardHeader>
             <CardTitle>Refresh pipeline</CardTitle>
             <CardDescription>Queue-backed sync with inline fallback for operational safety.</CardDescription>
+            <CardDescription>Runs profile sync, job ingest, and scoring in one request.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {renderRefreshMessage(refreshStatus) && (
@@ -163,6 +165,10 @@ export default async function DashboardPage({
             </form>
             <form action="/api/jobs/cleanup" method="post">
               <Button variant="outline" type="submit">Cleanup expired cache</Button>
+              This keeps cache short-lived and rankings deterministic. Dismissed jobs are hidden from default feed.
+            </div>
+            <form action="/api/jobs/refresh" method="post">
+              <Button type="submit">Refresh jobs now</Button>
             </form>
           </CardContent>
         </Card>

@@ -60,6 +60,11 @@ test("scoreJob rewards keyword and skill overlap", () => {
 });
 
 test("ranking config caps are respected", () => {
+  assert.ok(result.overallScore > 50);
+  assert.ok(result.explanation.matchedKeywords.includes("typescript"));
+});
+
+test("scoreJob applies exclusion penalty", () => {
   const result = scoreJob({
     preference: {
       id: "pref_2",
@@ -68,6 +73,10 @@ test("ranking config caps are respected", () => {
       preferredKeywords: ["react", "next", "typescript", "frontend"],
       excludedKeywords: [],
       preferredIndustries: ["saas", "ecommerce"],
+      preferredRoles: [],
+      preferredKeywords: ["backend"],
+      excludedKeywords: ["blockchain"],
+      preferredIndustries: [],
       minimumHourlyRateUsd: null,
       minimumFixedBudgetUsd: null,
       contractType: ContractTypePreference.BOTH,
@@ -79,6 +88,7 @@ test("ranking config caps are respected", () => {
       overview: null,
       skills: ["react", "next", "typescript", "frontend"]
     },
+    profile: null,
     job: {
       id: "job_2",
       providerJobId: "up_2",
@@ -93,6 +103,16 @@ test("ranking config caps are respected", () => {
       durationLabel: null,
       category: "SaaS",
       skills: ["react", "next", "typescript", "frontend"],
+      title: "Blockchain backend build",
+      description: "Need blockchain protocol work",
+      contractType: "FIXED_PRICE",
+      experienceLevel: null,
+      hourlyMinUsd: null,
+      hourlyMaxUsd: null,
+      fixedBudgetUsd: new Prisma.Decimal(3000),
+      durationLabel: null,
+      category: "Software",
+      skills: ["Node.js"],
       clientCountry: null,
       clientTotalHires: null,
       clientTotalPostedJobs: null,
@@ -111,4 +131,6 @@ test("ranking config caps are respected", () => {
   assert.ok(result.skillScore <= rankingConfig.scoreCaps.skill);
   assert.ok(result.keywordScore <= rankingConfig.scoreCaps.keyword);
   assert.ok(result.preferenceScore <= rankingConfig.scoreCaps.preference);
+  assert.ok(result.penaltyScore > 0);
+  assert.ok(result.explanation.warnings.some((warning) => warning.includes("excluded keyword")));
 });
