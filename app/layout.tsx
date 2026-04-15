@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html className={`${fontSans.variable} ${fontMono.variable}`} lang="en">
-      <body>{children}</body>
+      <body className="min-h-screen font-sans text-foreground">{children}</body>
     </html>
   );
 }

@@ -1,4 +1,4 @@
-import { ContractTypePreference } from "@prisma/client";
+import { ContractTypePreference } from "@/lib/db/types";
 
 export const FREELANCER_PROFILE_QUERY = /* GraphQL */ `
   query FreelancerProfile {

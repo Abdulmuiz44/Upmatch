@@ -1,6 +1,6 @@
 import "server-only";
 
-import { ContractTypePreference } from "@prisma/client";
+import { ContractTypePreference } from "@/lib/db/types";
 
 import { onboardingSchema } from "@/lib/auth/validation";
 import { splitCommaSeparated } from "@/lib/utils";

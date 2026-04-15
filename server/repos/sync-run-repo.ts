@@ -1,61 +1,84 @@
 import "server-only";
 
-import { Prisma, SyncRunStatus, SyncRunType } from "@prisma/client";
+import { createId, query } from "@/lib/db/client";
+import { toDate, toJson } from "@/lib/db/row";
+import { type JsonValue, SyncRunStatus, SyncRunType, type SyncRun } from "@/lib/db/types";
 
-import { prisma } from "@/lib/prisma";
+type SyncRunRow = {
+  id: string;
+  user_id: string;
+  type: SyncRunType;
+  status: SyncRunStatus;
+  started_at: Date | string | null;
+  completed_at: Date | string | null;
+  error_message: string | null;
+  metadata: SyncRun["metadata"];
+  created_at: Date | string;
+  updated_at: Date | string;
+};
+
+function mapSyncRun(row: SyncRunRow): SyncRun {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    type: row.type,
+    status: row.status,
+    startedAt: toDate(row.started_at),
+    completedAt: toDate(row.completed_at),
+    errorMessage: row.error_message,
+    metadata: toJson(row.metadata),
+    createdAt: toDate(row.created_at) as Date,
+    updatedAt: toDate(row.updated_at) as Date
+  };
+}
 
 export function createSyncRun(input: {
   userId: string;
   type: SyncRunType;
   status?: SyncRunStatus;
-  metadata?: Prisma.InputJsonValue;
+  metadata?: JsonValue;
 }) {
-  return prisma.syncRun.create({
-    data: {
-      userId: input.userId,
-      type: input.type,
-      status: input.status ?? SyncRunStatus.QUEUED,
-      metadata: input.metadata
-    }
-  });
+  return query<SyncRunRow>(
+    `INSERT INTO sync_runs (id, user_id, type, status, metadata)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING *`,
+    [createId(), input.userId, input.type, input.status ?? SyncRunStatus.QUEUED, input.metadata ?? null]
+  ).then((result) => mapSyncRun(result.rows[0]));
 }
 
 export function markSyncRunRunning(id: string) {
-  return prisma.syncRun.update({
-    where: { id },
-    data: {
-      status: SyncRunStatus.RUNNING,
-      startedAt: new Date(),
-      errorMessage: null
-    }
-  });
+  return query<SyncRunRow>(
+    `UPDATE sync_runs
+     SET status = $2, started_at = NOW(), error_message = NULL, updated_at = NOW()
+     WHERE id = $1
+     RETURNING *`,
+    [id, SyncRunStatus.RUNNING]
+  ).then((result) => mapSyncRun(result.rows[0]));
 }
 
-export function markSyncRunSucceeded(id: string, metadata?: Prisma.InputJsonValue) {
-  return prisma.syncRun.update({
-    where: { id },
-    data: {
-      status: SyncRunStatus.SUCCEEDED,
-      completedAt: new Date(),
-      metadata
-    }
-  });
+export function markSyncRunSucceeded(id: string, metadata?: JsonValue) {
+  return query<SyncRunRow>(
+    `UPDATE sync_runs
+     SET status = $2, completed_at = NOW(), metadata = $3, updated_at = NOW()
+     WHERE id = $1
+     RETURNING *`,
+    [id, SyncRunStatus.SUCCEEDED, metadata ?? null]
+  ).then((result) => mapSyncRun(result.rows[0]));
 }
 
 export function markSyncRunFailed(id: string, errorMessage: string) {
-  return prisma.syncRun.update({
-    where: { id },
-    data: {
-      status: SyncRunStatus.FAILED,
-      completedAt: new Date(),
-      errorMessage
-    }
-  });
+  return query<SyncRunRow>(
+    `UPDATE sync_runs
+     SET status = $2, completed_at = NOW(), error_message = $3, updated_at = NOW()
+     WHERE id = $1
+     RETURNING *`,
+    [id, SyncRunStatus.FAILED, errorMessage]
+  ).then((result) => mapSyncRun(result.rows[0]));
 }
 
 export function getLatestSyncRun(userId: string) {
-  return prisma.syncRun.findFirst({
-    where: { userId },
-    orderBy: { createdAt: "desc" }
-  });
+  return query<SyncRunRow>(
+    `SELECT * FROM sync_runs WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1`,
+    [userId]
+  ).then((result) => (result.rows[0] ? mapSyncRun(result.rows[0]) : null));
 }

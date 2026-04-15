@@ -17,11 +17,11 @@ export default async function DashboardLayout({
   const currentPath = headerList.get("x-pathname") ?? "/dashboard";
 
   return (
-    <main className="py-6">
+    <main className="pb-8 pt-4 sm:pt-6">
       <PageShell>
-        <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="grid gap-4 lg:grid-cols-[290px_minmax(0,1fr)] lg:gap-6">
           <DashboardSidebar currentPath={currentPath} />
-          <div className="space-y-6">
+          <div className="space-y-4 lg:space-y-6">
             <DashboardTopbar user={user} />
             {children}
           </div>

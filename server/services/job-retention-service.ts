@@ -1,6 +1,6 @@
 import "server-only";
 
-import { prisma } from "@/lib/prisma";
+import { query } from "@/lib/db/client";
 
 export type CleanupSummary = {
   expiredJobsDeleted: number;
@@ -17,18 +17,11 @@ export function buildCleanupPlan(expiredJobIds: string[]) {
 }
 
 export async function cleanupExpiredJobs(): Promise<CleanupSummary> {
-  const expiredJobs = await prisma.job.findMany({
-    where: {
-      expiresAt: {
-        lte: new Date()
-      }
-    },
-    select: {
-      id: true
-    }
-  });
+  const expiredJobs = await query<{ id: string }>(
+    `SELECT id FROM jobs WHERE expires_at <= NOW()`
+  );
 
-  const expiredJobIds = expiredJobs.map((job) => job.id);
+  const expiredJobIds = expiredJobs.rows.map((job) => job.id);
   const plan = buildCleanupPlan(expiredJobIds);
   console.info(JSON.stringify({ event: "jobs.cleanup.plan", ...plan }));
 
@@ -42,23 +35,29 @@ export async function cleanupExpiredJobs(): Promise<CleanupSummary> {
   }
 
   const [proposalAssistsDeleted, scoresDeleted, statesDeleted] = await Promise.all([
-    prisma.proposalAssist.deleteMany({ where: { jobId: { in: expiredJobIds } } }),
-    prisma.jobScore.deleteMany({ where: { jobId: { in: expiredJobIds } } }),
-    prisma.jobUserState.deleteMany({ where: { jobId: { in: expiredJobIds } } })
+    query(
+      `DELETE FROM proposal_assists WHERE job_id = ANY($1::text[])`,
+      [expiredJobIds]
+    ),
+    query(
+      `DELETE FROM job_scores WHERE job_id = ANY($1::text[])`,
+      [expiredJobIds]
+    ),
+    query(
+      `DELETE FROM job_user_states WHERE job_id = ANY($1::text[])`,
+      [expiredJobIds]
+    )
   ]);
 
-  const deletedJobs = await prisma.job.deleteMany({
-    where: {
-      id: {
-        in: expiredJobIds
-      }
-    }
-  });
+  const deletedJobs = await query(
+    `DELETE FROM jobs WHERE id = ANY($1::text[])`,
+    [expiredJobIds]
+  );
 
   return {
-    expiredJobsDeleted: deletedJobs.count,
-    proposalAssistsDeleted: proposalAssistsDeleted.count,
-    scoresDeleted: scoresDeleted.count,
-    statesDeleted: statesDeleted.count
+    expiredJobsDeleted: deletedJobs.rowCount ?? 0,
+    proposalAssistsDeleted: proposalAssistsDeleted.rowCount ?? 0,
+    scoresDeleted: scoresDeleted.rowCount ?? 0,
+    statesDeleted: statesDeleted.rowCount ?? 0
   };
 }

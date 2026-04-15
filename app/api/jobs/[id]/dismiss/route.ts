@@ -1,6 +1,6 @@
-import { JobUserStateType } from "@prisma/client";
 import { NextResponse } from "next/server";
 
+import { JobUserStateType } from "@/lib/db/types";
 import { getSession } from "@/lib/auth/session";
 import { upsertJobUserState } from "@/server/repos/job-user-state-repo";
 

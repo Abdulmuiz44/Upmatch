@@ -1,6 +1,6 @@
 import "server-only";
 
-import { ConnectedAccountStatus } from "@prisma/client";
+import { ConnectedAccountStatus } from "@/lib/db/types";
 
 import {
   buildUpworkAuthorizationUrl,

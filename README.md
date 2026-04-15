@@ -9,7 +9,7 @@ This repository now contains the foundation slice for the product:
 - Product and engineering docs in [`docs/`](./docs)
 - A Next.js App Router scaffold with Tailwind styling
 - Cookie-based authentication foundation with protected dashboard routes
-- Prisma schema for core user, connection, profile, and preference models
+- Local PostgreSQL schema bootstrap and SQL-backed repository layer
 - Environment validation with Zod
 - Upwork OAuth server-side scaffolding aligned to official OAuth 2.0 and GraphQL constraints
 - Dashboard, onboarding, settings, and jobs placeholder routes
@@ -41,10 +41,9 @@ Upmatch is not:
 
 1. Copy `.env.example` to `.env`.
 2. Start Postgres and create a database.
-3. Install dependencies with `npm install`.
-4. Generate Prisma client with `npm run db:generate`.
-5. Push the initial schema with `npm run db:push`.
-6. Start the app with `npm run dev`.
+3. Install dependencies with `pnpm install`.
+4. Push the initial schema with `pnpm run db:push`.
+5. Start the app with `pnpm dev`.
 
 ## Current Focus
 

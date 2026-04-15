@@ -113,7 +113,7 @@ The MVP scoring model should be deterministic, explainable, and easy to tune. It
 - product docs
 - Next.js scaffold
 - auth base
-- Prisma schema
+- SQL schema bootstrap
 - env validation
 - protected dashboard shell
 - Upwork OAuth scaffolding

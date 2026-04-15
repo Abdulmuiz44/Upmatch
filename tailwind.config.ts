@@ -30,6 +30,18 @@ const config: Config = {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))"
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))"
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))"
+        },
+        danger: {
+          DEFAULT: "hsl(var(--danger))",
+          foreground: "hsl(var(--danger-foreground))"
+        },
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))"
@@ -40,7 +52,8 @@ const config: Config = {
         "2xl": "1.5rem"
       },
       boxShadow: {
-        soft: "0 24px 60px -24px rgba(15, 23, 42, 0.22)"
+        soft: "0 30px 80px -38px rgba(17, 24, 39, 0.22)",
+        panel: "0 18px 50px -32px rgba(17, 24, 39, 0.18)"
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],

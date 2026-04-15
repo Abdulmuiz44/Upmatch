@@ -1,6 +1,6 @@
 import "server-only";
 
-import { ConnectedAccountStatus } from "@prisma/client";
+import { ConnectedAccountStatus } from "@/lib/db/types";
 
 import { encryptSecret } from "@/lib/crypto/tokens";
 import { persistUpworkConnection } from "@/server/repos/connected-account-repo";

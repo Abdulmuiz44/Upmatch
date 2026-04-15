@@ -1,6 +1,6 @@
 import "server-only";
 
-import { SyncRunType } from "@prisma/client";
+import { SyncRunType } from "@/lib/db/types";
 
 import { runSyncPipeline, type SyncPipelineType } from "@/server/services/sync-orchestrator-service";
 
