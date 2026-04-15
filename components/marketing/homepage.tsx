@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import {
   ArrowRight,
@@ -10,7 +8,8 @@ import {
   SlidersHorizontal,
   Sparkles
 } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+
+import { MarketingMotion } from "@/components/marketing/marketing-motion";
 
 const navItems = [
   { href: "#how-it-works", label: "How it works" },
@@ -78,12 +77,9 @@ function BrandMark() {
 
 function MockWorkspace() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.5 }}
+    <MarketingMotion
       className="relative mx-auto w-full max-w-[22rem] rounded-[2rem] border border-white/10 bg-[#0f1014] p-4 shadow-[0_32px_120px_-50px_rgba(0,0,0,0.9)] sm:max-w-none sm:p-5"
+      distance={24}
     >
       <div className="absolute inset-x-10 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.15),transparent_70%)]" />
       <div className="relative space-y-4">
@@ -141,13 +137,11 @@ function MockWorkspace() {
           ))}
         </div>
       </div>
-    </motion.div>
+    </MarketingMotion>
   );
 }
 
 export function MarketingHomepage() {
-  const reduceMotion = useReducedMotion();
-
   return (
     <main className="min-h-screen overflow-hidden bg-[#09090b] font-sans text-white selection:bg-white/20">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_28%),radial-gradient(circle_at_15%_20%,rgba(59,130,246,0.10),transparent_22%),radial-gradient(circle_at_80%_0%,rgba(16,185,129,0.10),transparent_24%)]" />
@@ -188,12 +182,7 @@ export function MarketingHomepage() {
 
         <section className="py-16 sm:py-20 lg:py-24">
           <div className="grid gap-12 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-              animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="max-w-3xl"
-            >
+            <MarketingMotion className="max-w-3xl" mode="appear">
               <div className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs uppercase tracking-[0.22em] text-zinc-400">
                 Compliance-first Upwork job intelligence
               </div>
@@ -234,7 +223,7 @@ export function MarketingHomepage() {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </MarketingMotion>
 
             <MockWorkspace />
           </div>
@@ -257,13 +246,12 @@ export function MarketingHomepage() {
               const Icon = item.icon;
 
               return (
-                <motion.div
+                <MarketingMotion
                   key={item.title}
-                  initial={reduceMotion ? false : { opacity: 0, y: 22 }}
-                  whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.35 }}
-                  transition={{ duration: 0.45, delay: index * 0.05 }}
                   className="rounded-[1.8rem] border border-white/10 bg-white/[0.03] p-5 sm:p-6"
+                  delay={index * 0.05}
+                  distance={22}
+                  amount={0.35}
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white">
                     <Icon className="h-5 w-5" />
@@ -272,7 +260,7 @@ export function MarketingHomepage() {
                   <p className="mt-3 text-sm leading-6 text-zinc-400 sm:text-[15px]">
                     {item.body}
                   </p>
-                </motion.div>
+                </MarketingMotion>
               );
             })}
           </div>

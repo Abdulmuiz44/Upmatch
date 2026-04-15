@@ -9,16 +9,12 @@ import { getSyncStatus } from "@/server/services/sync-orchestrator-service";
 
 export async function getDashboardSnapshot(userId: string) {
   const [connection, preference, profile, rankedRows, dismissedJobIds, syncStatus] = await Promise.all([
-
-export async function getDashboardSnapshot(userId: string) {
-  const [connection, preference, profile, rankedRows, dismissedJobIds] = await Promise.all([
     findUpworkConnectionByUserId(userId),
     getPreferenceByUserId(userId),
     getFreelancerProfileByUserId(userId),
     getRankedJobsForUser(userId),
     getDismissedJobIds(userId),
     getSyncStatus(userId)
-    getDismissedJobIds(userId)
   ]);
 
   const dismissed = new Set(dismissedJobIds);

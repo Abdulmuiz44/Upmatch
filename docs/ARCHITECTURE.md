@@ -2,7 +2,7 @@
 
 ## System Overview
 
-Upmatch is a Next.js application with a server-rendered dashboard, a Postgres database accessed through Prisma, and server-only integrations for authentication and Upwork connectivity. The product is intentionally designed around compliant job discovery and decision support rather than submission automation.
+Upmatch is a Next.js application with a server-rendered dashboard, a Postgres database accessed through a lightweight `pg` data layer, and server-only integrations for authentication and Upwork connectivity. The product is intentionally designed around compliant job discovery and decision support rather than submission automation.
 
 ## Architecture Goals
 
@@ -20,9 +20,9 @@ Upmatch is a Next.js application with a server-rendered dashboard, a Postgres da
 - `lib/auth/`: cookie session auth, validation, and handlers
 - `lib/upwork/`: OAuth URL building, token exchange scaffolding, tenant-aware request helpers
 - `lib/crypto/`: encryption helpers for token-at-rest protection
-- `server/repos/`: focused Prisma access modules
+- `server/repos/`: focused SQL-backed repository modules
 - `server/services/`: orchestration and business logic modules
-- `prisma/`: schema and future migrations
+- `db/`: SQL schema bootstrap scripts
 - `docs/`: product, architecture, and implementation docs
 
 ## Frontend Structure
@@ -188,8 +188,8 @@ lib/
 server/
   repos/
   services/
-prisma/
-  schema.prisma
+db/
+  schema.sql
 docs/
 public/
 ```

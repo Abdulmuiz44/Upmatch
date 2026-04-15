@@ -11,14 +11,14 @@ Establish a production-shaped starter codebase with docs, app shell, schema, env
 - create project docs
 - scaffold Next.js App Router structure
 - add UI primitives and shell layouts
-- add Prisma schema and client module
+- add PostgreSQL schema bootstrap and SQL repository layer
 - add env validation and server-only handling
 
 ### Done When
 
 - app boots locally
 - docs are complete enough to guide execution
-- Prisma schema can generate successfully
+- SQL schema can be applied successfully
 - dashboard routes have a coherent shell
 
 ## Milestone 2: Auth

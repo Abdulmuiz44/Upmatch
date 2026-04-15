@@ -32,7 +32,7 @@ Freelancers need better signal, not more noise. The Upwork job feed can be broad
 - Tailwind CSS
 - shadcn/ui-style reusable component primitives
 - Postgres
-- Prisma
+- `pg`
 - Zod
 - server-side OAuth integration module for Upwork
 
@@ -41,10 +41,9 @@ Freelancers need better signal, not more noise. The Upwork job feed can be broad
 1. Copy `.env.example` to `.env`.
 2. Set a Postgres `DATABASE_URL`.
 3. Set app and auth secrets.
-4. Install dependencies with `npm install`.
-5. Run `npm run db:generate`.
-6. Run `npm run db:push`.
-7. Run `npm run dev`.
+4. Install dependencies with `pnpm install`.
+5. Run `pnpm run db:push`.
+6. Run `pnpm dev`.
 
 ## Environment Variables
 

@@ -1,7 +1,6 @@
 import "server-only";
 
-import { Prisma, SyncRunStatus, SyncRunType } from "@prisma/client";
-
+import { type JsonValue, SyncRunStatus, SyncRunType } from "@/lib/db/types";
 import {
   createSyncRun,
   getLatestSyncRun,
@@ -19,7 +18,7 @@ function logEvent(event: string, payload: Record<string, unknown>) {
   console.info(JSON.stringify({ event, ...payload }));
 }
 
-export async function startSyncRun(userId: string, type: SyncPipelineType, metadata?: Prisma.InputJsonValue) {
+export async function startSyncRun(userId: string, type: SyncPipelineType, metadata?: JsonValue) {
   return createSyncRun({
     userId,
     type:

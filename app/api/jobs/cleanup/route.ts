@@ -1,7 +1,7 @@
-import { SyncRunType } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/lib/auth/session";
+import { SyncRunType } from "@/lib/db/types";
 import { createSyncRun, markSyncRunFailed, markSyncRunRunning, markSyncRunSucceeded } from "@/server/repos/sync-run-repo";
 import { cleanupExpiredJobs } from "@/server/services/job-retention-service";
 
